@@ -21,6 +21,12 @@ export default {
 			return new Response('Method not allowed', { status: 405 })
 		}
 
+		const key = 'default'
+		const { success } = await env.MY_RATE_LIMITER.limit({ key: key }) // key can be any string of your choosing
+		if (!success) {
+			return new Response(`429 Failure – rate limit exceeded for ${key}`, { status: 429 })
+		}
+
 		try {
 			// Extract and validate the target URL
 			const targetUrl = extractURLFromRequest(request)
