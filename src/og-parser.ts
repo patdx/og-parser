@@ -36,11 +36,31 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 	}
 }
 
-export async function parseOpenGraph(response: Response, url: string): Promise<OpenGraphData> {
+export async function parseOpenGraph({
+	response,
+	requestUrl,
+	cfColo,
+	cfCacheStatus,
+}: {
+	response: Response
+	requestUrl: string
+	cfColo?: string
+	cfCacheStatus?: string
+}): Promise<OpenGraphData> {
 	const result: ParserResult = {
 		data: {
-			url,
+			requestUrl,
+			resolvedUrl: response.url,
+			title: undefined,
+			description: undefined,
+			image: undefined,
+			siteName: undefined,
+			type: undefined,
 			metadata: {},
+			diagnostics: {
+				cfColo,
+				cfCacheStatus,
+			},
 		},
 	}
 

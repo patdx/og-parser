@@ -8,7 +8,7 @@ export class URLValidationError extends Error {
 export function validateAndNormalizeURL(urlString: string): URL {
 	const hasProtocol = /^https?:\/\//i.test(urlString)
 	if (!hasProtocol) {
-		urlString = 'http://' + urlString
+		urlString = 'https://' + urlString
 	}
 	try {
 		const url = new URL(urlString)
