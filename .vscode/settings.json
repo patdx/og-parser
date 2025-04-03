@@ -3,5 +3,10 @@
 		"wrangler.json": "jsonc"
 	},
 	"editor.tabSize": 2,
-	"editor.indentSize": 2
+	"editor.indentSize": 2,
+	"github.copilot.chat.codeGeneration.instructions": [
+		{
+			"file": "README.md"
+		}
+	]
 }
