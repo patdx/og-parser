@@ -116,6 +116,10 @@ export default {
 				throw new Error(`Failed to fetch URL: ${response.status}`)
 			}
 
+			// Clone response for debug output
+			const responseClone = response.clone()
+			const debugMode = url.searchParams.has('debug')
+
 			// Parse the Open Graph data
 			const ogData = await parseOpenGraph({
 				response,
@@ -123,6 +127,11 @@ export default {
 				cfColo: request.cf?.colo as string | undefined,
 				cfCacheStatus: response.headers.get('cf-cache-status') ?? undefined,
 			})
+
+			if (debugMode) {
+				const responseText = await responseClone.text()
+				ogData.diagnostics.responseText = responseText
+			}
 
 			// Return JSON response with caching headers
 			return new Response(JSON.stringify(ogData, null, 2), {

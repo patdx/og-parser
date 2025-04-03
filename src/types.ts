@@ -6,10 +6,13 @@ export interface OpenGraphData {
 	image?: string
 	siteName?: string
 	type?: string
+	htmlLang?: string
 	metadata: Record<string, string>
+	ldJsons: any[] // Array of parsed JSON-LD data
 	diagnostics: {
 		cfColo?: string
 		cfCacheStatus?: string
+		responseText?: string
 	}
 }
 

@@ -1,5 +1,16 @@
 import { OpenGraphData, ParserResult } from './types'
 
+class HtmlHandler implements HTMLRewriterElementContentHandlers {
+	constructor(private result: ParserResult) {}
+
+	element(element: Element): void {
+		const lang = element.getAttribute('lang')
+		if (lang) {
+			this.result.data.htmlLang = lang
+		}
+	}
+}
+
 class MetaHandler implements HTMLRewriterElementContentHandlers {
 	constructor(private result: ParserResult) {}
 
@@ -30,9 +41,48 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 					this.result.data.type = content
 					break
 				default:
-					this.result.data.metadata[key] = content
+					this.result.data.metadata[propertyLower] = content
 			}
 		}
+	}
+}
+
+// TODO: Not working yet AFAIKT
+class ScriptHandler implements HTMLRewriterElementContentHandlers {
+	private textChunks: string[] = []
+
+	constructor(private result: ParserResult) {
+		if (!this.result.data.ldJsons) {
+			this.result.data.ldJsons = []
+		}
+	}
+
+	text(text: Text) {
+		this.textChunks.push(text.text)
+	}
+
+	element(element: Element) {
+		const type = element.getAttribute('type')
+		if (type?.toLowerCase() !== 'application/ld+json') {
+			return
+		}
+		this.textChunks = []
+	}
+
+	comments(comment: Comment) {
+		// Ignore comments
+	}
+
+	onEndTag() {
+		const jsonText = this.textChunks.join('')
+		try {
+			const parsedData = JSON.parse(jsonText)
+			this.result.data.ldJsons.push(parsedData)
+		} catch (e) {
+			console.log(`Failed to parse JSON-LD: ${e}, text: ${jsonText}`)
+			// Silently ignore invalid JSON
+		}
+		this.textChunks = []
 	}
 }
 
@@ -56,7 +106,9 @@ export async function parseOpenGraph({
 			image: undefined,
 			siteName: undefined,
 			type: undefined,
+			htmlLang: undefined,
 			metadata: {},
+			ldJsons: [],
 			diagnostics: {
 				cfColo,
 				cfCacheStatus,
@@ -64,7 +116,10 @@ export async function parseOpenGraph({
 		},
 	}
 
-	const rewriter = new HTMLRewriter().on('meta', new MetaHandler(result))
+	const rewriter = new HTMLRewriter()
+		.on('meta', new MetaHandler(result))
+		.on('html', new HtmlHandler(result))
+		.on('script', new ScriptHandler(result))
 
 	await rewriter.transform(response).text()
 
