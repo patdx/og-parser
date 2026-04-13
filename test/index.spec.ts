@@ -4,6 +4,13 @@ import worker from '../src/index'
 import { parseOpenGraph } from '../src/og-parser'
 
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>
+type ParsedResponse = {
+	title?: string
+	ldJsons: Array<{
+		'@type'?: string
+		name?: string
+	}>
+}
 
 afterEach(() => {
 	vi.restoreAllMocks()
@@ -68,7 +75,7 @@ describe('worker', () => {
 		await waitOnExecutionContext(ctx)
 
 		expect(response.status).toBe(200)
-		expect((await response.json()) as { title?: string; ldJsons: Array<Record<string, string>> }).toMatchObject({
+		expect((await response.json()) as ParsedResponse).toMatchObject({
 			title: 'Find Coffee',
 			ldJsons: [{ '@type': 'WebSite', name: 'Find Coffee' }],
 		})
