@@ -23,7 +23,7 @@ describe('parseOpenGraph', () => {
 			<html lang="en">
 				<head>
 					<script type="application/ld+json">
-						{"@context":"https://schema.org","@type":"WebSite","name":"Find Coffee"}
+						{"@context":"https://schema.org","@type":"WebSite","name":"Orbital Atlas"}
 					</script>
 				</head>
 			</html>`,
@@ -36,7 +36,7 @@ describe('parseOpenGraph', () => {
 
 		const result = await parseOpenGraph({
 			response,
-			requestUrl: 'https://www.findcoffee.app/en',
+			requestUrl: 'https://orbital-atlas.example/explore',
 		})
 
 		expect(result.htmlLang).toBe('en')
@@ -44,7 +44,7 @@ describe('parseOpenGraph', () => {
 			{
 				'@context': 'https://schema.org',
 				'@type': 'WebSite',
-				name: 'Find Coffee',
+				name: 'Orbital Atlas',
 			},
 		])
 	})
@@ -57,8 +57,8 @@ describe('worker', () => {
 				`<!doctype html>
 				<html>
 					<head>
-						<meta property="og:title" content="Find Coffee" />
-						<script type="application/ld+json">{"@type":"WebSite","name":"Find Coffee"}</script>
+						<meta property="og:title" content="Orbital Atlas" />
+						<script type="application/ld+json">{"@type":"WebSite","name":"Orbital Atlas"}</script>
 					</head>
 				</html>`,
 				{
@@ -69,15 +69,15 @@ describe('worker', () => {
 			),
 		)
 
-		const request = new IncomingRequest('https://worker.test/https://www.findcoffee.app/en')
+		const request = new IncomingRequest('https://worker.test/https://orbital-atlas.example/explore')
 		const ctx = createExecutionContext()
 		const response = await worker.fetch(request, env, ctx)
 		await waitOnExecutionContext(ctx)
 
 		expect(response.status).toBe(200)
 		expect((await response.json()) as ParsedResponse).toMatchObject({
-			title: 'Find Coffee',
-			ldJsons: [{ '@type': 'WebSite', name: 'Find Coffee' }],
+			title: 'Orbital Atlas',
+			ldJsons: [{ '@type': 'WebSite', name: 'Orbital Atlas' }],
 		})
 	})
 
