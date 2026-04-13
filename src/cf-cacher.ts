@@ -34,6 +34,7 @@ export async function cfCacher({
 			response = await fetch(request)
 			// Must use Response constructor to inherit all of response's fields
 			response = new Response(response.body, response)
+			response.headers.set('cf-cache-status', 'MISS')
 
 			// Set Cache-Control header to instruct the cache to store the response for cacheTtl seconds
 			response.headers.set('Cache-Control', `s-maxage=${cacheTtl}`)
@@ -41,6 +42,8 @@ export async function cfCacher({
 			executionCtx.waitUntil(cache.put(cacheKey, response.clone() as any))
 		} else {
 			console.log(`Cache hit for: ${cacheKey}.`)
+			response = new Response(response.body, response)
+			response.headers.set('cf-cache-status', 'HIT')
 		}
 
 		return response
