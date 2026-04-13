@@ -102,7 +102,7 @@ export default {
 				},
 				executionCtx: ctx,
 				cacheTtl: seconds('1 minute'),
-				useCfFetch: true,
+				useCfFetch: false,
 			})
 
 			if (!response.ok) {

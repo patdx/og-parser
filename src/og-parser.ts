@@ -47,9 +47,9 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 	}
 }
 
-// TODO: Not working yet AFAIKT
 class ScriptHandler implements HTMLRewriterElementContentHandlers {
 	private textChunks: string[] = []
+	private isCapturingLdJson = false
 
 	constructor(private result: ParserResult) {
 		if (!this.result.data.ldJsons) {
@@ -58,30 +58,44 @@ class ScriptHandler implements HTMLRewriterElementContentHandlers {
 	}
 
 	text(text: Text) {
-		this.textChunks.push(text.text)
+		if (this.isCapturingLdJson) {
+			this.textChunks.push(text.text)
+		}
 	}
 
 	element(element: Element) {
-		const type = element.getAttribute('type')
-		if (type?.toLowerCase() !== 'application/ld+json') {
+		const type = element.getAttribute('type')?.trim().toLowerCase()
+		if (type !== 'application/ld+json') {
+			this.isCapturingLdJson = false
+			this.textChunks = []
 			return
 		}
+
+		this.isCapturingLdJson = true
 		this.textChunks = []
+		element.onEndTag(() => this.flush())
 	}
 
 	comments(comment: Comment) {
 		// Ignore comments
 	}
 
-	onEndTag() {
-		const jsonText = this.textChunks.join('')
+	private flush() {
+		if (!this.isCapturingLdJson) {
+			return
+		}
+
+		const jsonText = this.textChunks.join('').trim()
 		try {
 			const parsedData = JSON.parse(jsonText)
 			this.result.data.ldJsons.push(parsedData)
 		} catch (e) {
-			console.log(`Failed to parse JSON-LD: ${e}, text: ${jsonText}`)
+			const message = e instanceof Error ? e.message : String(e)
+			const jsonPreview = jsonText.replaceAll(/\s+/g, ' ').slice(0, 500)
+			console.error(`Failed to parse JSON-LD: ${message}, text preview: ${jsonPreview}`)
 			// Silently ignore invalid JSON
 		}
+		this.isCapturingLdJson = false
 		this.textChunks = []
 	}
 }

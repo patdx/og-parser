@@ -1,25 +1,112 @@
-// test/index.spec.ts
-import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test'
-import { describe, it, expect } from 'vitest'
+import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import worker from '../src/index'
+import { parseOpenGraph } from '../src/og-parser'
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>
+type ParsedResponse = {
+	title?: string
+	ldJsons: Array<{
+		'@type'?: string
+		name?: string
+	}>
+}
 
-describe('Hello World worker', () => {
-	it('responds with Hello World! (unit style)', async () => {
-		const request = new IncomingRequest('http://example.com')
-		// Create an empty context to pass to `worker.fetch()`.
+afterEach(() => {
+	vi.restoreAllMocks()
+})
+
+describe('parseOpenGraph', () => {
+	it('extracts JSON-LD from application/ld+json scripts', async () => {
+		const response = new Response(
+			`<!doctype html>
+			<html lang="en">
+				<head>
+					<script type="application/ld+json">
+						{"@context":"https://schema.org","@type":"WebSite","name":"Orbital Atlas"}
+					</script>
+				</head>
+			</html>`,
+			{
+				headers: {
+					'content-type': 'text/html',
+				},
+			},
+		)
+
+		const result = await parseOpenGraph({
+			response,
+			requestUrl: 'https://orbital-atlas.example/explore',
+		})
+
+		expect(result.htmlLang).toBe('en')
+		expect(result.ldJsons).toEqual([
+			{
+				'@context': 'https://schema.org',
+				'@type': 'WebSite',
+				name: 'Orbital Atlas',
+			},
+		])
+	})
+})
+
+describe('worker', () => {
+	it('returns parsed Open Graph data for the requested URL', async () => {
+		vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+			new Response(
+				`<!doctype html>
+				<html>
+					<head>
+						<meta property="og:title" content="Orbital Atlas" />
+						<script type="application/ld+json">{"@type":"WebSite","name":"Orbital Atlas"}</script>
+					</head>
+				</html>`,
+				{
+					headers: {
+						'content-type': 'text/html',
+					},
+				},
+			),
+		)
+
+		const request = new IncomingRequest('https://worker.test/https://orbital-atlas.example/explore')
 		const ctx = createExecutionContext()
 		const response = await worker.fetch(request, env, ctx)
-		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
 		await waitOnExecutionContext(ctx)
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`)
+
+		expect(response.status).toBe(200)
+		expect((await response.json()) as ParsedResponse).toMatchObject({
+			title: 'Orbital Atlas',
+			ldJsons: [{ '@type': 'WebSite', name: 'Orbital Atlas' }],
+		})
 	})
 
-	it('responds with Hello World! (integration style)', async () => {
-		const response = await SELF.fetch('https://example.com')
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`)
+	it('avoids the redirect-prone CF cache fetch path for redirecting targets', async () => {
+		const redirectLoopError = new Error(
+			'Too many redirects. https://facebook.com/, https://www.facebook.com/',
+		)
+		const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(
+			async (_input: RequestInfo | URL, init?: RequestInit<RequestInitCfProperties>) => {
+				if (init?.cf && typeof init.cf === 'object' && 'cacheKey' in init.cf) {
+					throw redirectLoopError
+				}
+
+				return new Response('<meta property="og:title" content="Facebook" />', {
+					headers: {
+						'content-type': 'text/html',
+					},
+				})
+			},
+		)
+
+		const request = new IncomingRequest('https://worker.test/facebook.com')
+		const ctx = createExecutionContext()
+		const response = await worker.fetch(request, env, ctx)
+		await waitOnExecutionContext(ctx)
+
+		expect(response.status).toBe(200)
+		expect(fetchMock).toHaveBeenCalledTimes(1)
+		expect(fetchMock.mock.calls[0]?.[1]).toBeUndefined()
+		expect((await response.json()) as { title?: string }).toMatchObject({ title: 'Facebook' })
 	})
 })
