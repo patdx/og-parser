@@ -90,7 +90,8 @@ class ScriptHandler implements HTMLRewriterElementContentHandlers {
 			const parsedData = JSON.parse(jsonText)
 			this.result.data.ldJsons.push(parsedData)
 		} catch (e) {
-			console.error(`Failed to parse JSON-LD: ${String(e)}, text: ${jsonText}`)
+			const message = e instanceof Error ? e.message : String(e)
+			console.error(`Failed to parse JSON-LD: ${message}, text: ${jsonText}`)
 			// Silently ignore invalid JSON
 		}
 		this.isCapturingLdJson = false
