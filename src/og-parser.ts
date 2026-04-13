@@ -47,7 +47,6 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 	}
 }
 
-// TODO: Not working yet AFAIKT
 class ScriptHandler implements HTMLRewriterElementContentHandlers {
 	private textChunks: string[] = []
 	private isCapturingLdJson = false

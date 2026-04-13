@@ -76,7 +76,7 @@ describe('worker', () => {
 
 	it('avoids the redirect-prone CF cache fetch path for redirecting targets', async () => {
 		const redirectLoopError = new Error(
-			'Too many redirects.https://facebook.com/, https://www.facebook.com/',
+			'Too many redirects. https://facebook.com/, https://www.facebook.com/',
 		)
 		const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(
 			async (_input: RequestInfo | URL, init?: RequestInit<RequestInitCfProperties>) => {
