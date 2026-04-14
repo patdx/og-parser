@@ -1,3 +1,4 @@
+import { RESOLVED_URL_HEADER } from './cf-cacher'
 import { OpenGraphData, ParserResult } from './types'
 
 class HtmlHandler implements HTMLRewriterElementContentHandlers {
@@ -114,7 +115,7 @@ export async function parseOpenGraph({
 	const result: ParserResult = {
 		data: {
 			requestUrl,
-			resolvedUrl: response.url,
+			resolvedUrl: response.url || response.headers.get(RESOLVED_URL_HEADER) || requestUrl,
 			title: undefined,
 			description: undefined,
 			image: undefined,

@@ -85,12 +85,8 @@ export default {
 			const targetUrl = extractURLFromRequest(request)
 			const validatedUrl = validateAndNormalizeURL(targetUrl)
 
-			const cacheKey = new URL(validatedUrl.toString())
-			copyHeader(request.headers, cacheKey.searchParams, 'accept-language')
-
 			const response = await cfCacher({
-				cacheKey: cacheKey.toString(),
-				getFreshValue: async () => {
+				getRequest: async () => {
 					const outgoingRequest = new Request(validatedUrl.toString(), {
 						headers: {
 							'User-Agent': 'OG-Parser Bot/1.0',
@@ -100,9 +96,7 @@ export default {
 					copyHeader(request.headers, outgoingRequest.headers, 'accept-language')
 					return outgoingRequest
 				},
-				executionCtx: ctx,
 				cacheTtl: seconds('1 minute'),
-				useCfFetch: false,
 			})
 
 			if (!response.ok) {
