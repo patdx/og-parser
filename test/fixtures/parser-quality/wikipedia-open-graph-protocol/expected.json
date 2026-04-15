@@ -1,0 +1,42 @@
+{
+	"sourceUrl": "https://en.wikipedia.org/wiki/Open_Graph_protocol",
+	"category": "reference",
+	"reviewStatus": "gold",
+	"notes": "Sparse OG-only reference page with no site_name or description in the reduced snapshot.",
+	"normalized": {
+		"title": "Open Graph protocol - Wikipedia",
+		"image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Open_Graph_protocol_logo.png",
+		"image_width": 1200,
+		"image_height": 1200,
+		"type": "website",
+		"html_lang": "en"
+	},
+	"required_meta_tags": [
+		{
+			"key": "og:image",
+			"content": "https://upload.wikimedia.org/wikipedia/commons/7/72/Open_Graph_protocol_logo.png"
+		},
+		{
+			"key": "og:image:width",
+			"content": "1200"
+		},
+		{
+			"key": "og:image:height",
+			"content": "1200"
+		},
+		{
+			"key": "og:title",
+			"content": "Open Graph protocol - Wikipedia"
+		},
+		{
+			"key": "og:type",
+			"content": "website"
+		}
+	],
+	"required_ld_jsons": [],
+	"missing": [
+		"description",
+		"site_name",
+		"canonical_url"
+	]
+}

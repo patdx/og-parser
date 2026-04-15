@@ -1,0 +1,77 @@
+{
+	"sourceUrl": "https://www.goodreads.com/book/show/41733839-the-great-gatsby",
+	"category": "book",
+	"reviewStatus": "gold",
+	"notes": "Book detail page with book-specific OG type and structured rating/author JSON-LD.",
+	"normalized": {
+		"title": "The Great Gatsby",
+		"description": "Alternate covers of this ISBN can be found here, here ...",
+		"image": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1738790966i/4671.jpg",
+		"site_name": "Goodreads",
+		"type": "books.book",
+		"html_lang": "en",
+		"authors": [
+			"F. Scott Fitzgerald"
+		],
+		"canonical_url": "https://www.goodreads.com/book/show/41733839-the-great-gatsby"
+	},
+	"required_meta_tags": [
+		{
+			"key": "og:title",
+			"content": "The Great Gatsby"
+		},
+		{
+			"key": "twitter:title",
+			"content": "The Great Gatsby"
+		},
+		{
+			"key": "og:type",
+			"content": "books.book"
+		},
+		{
+			"key": "twitter:card",
+			"content": "summary"
+		},
+		{
+			"key": "og:image",
+			"content": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1738790966i/4671.jpg"
+		},
+		{
+			"key": "twitter:image",
+			"content": "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1738790966i/4671.jpg"
+		},
+		{
+			"key": "og:url",
+			"content": "https://www.goodreads.com/book/show/41733839-the-great-gatsby"
+		},
+		{
+			"key": "og:site_name",
+			"content": "Goodreads"
+		},
+		{
+			"key": "og:description",
+			"content": "Alternate covers of this ISBN can be found here, here ..."
+		},
+		{
+			"key": "twitter:description",
+			"content": "Alternate covers of this ISBN can be found here, here ..."
+		}
+	],
+	"required_ld_jsons": [
+		{
+			"@type": "Book",
+			"name": "The Great Gatsby",
+			"isbn": "9780743273565",
+			"author": [
+				{
+					"@type": "Person",
+					"name": "F. Scott Fitzgerald"
+				}
+			],
+			"aggregateRating": {
+				"@type": "AggregateRating",
+				"ratingValue": 3.93
+			}
+		}
+	]
+}

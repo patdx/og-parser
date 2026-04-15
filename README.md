@@ -1,6 +1,6 @@
 # Open Graph Parser - Cloudflare Worker
 
-This project is a Cloudflare Worker that parses Open Graph metadata from websites. When given a URL, it fetches the page and extracts Open Graph tags, returning the data as JSON.
+This project is a Cloudflare Worker that fetches web pages and extracts Open Graph and related page signals as JSON.
 
 ## Architecture Overview
 
@@ -31,7 +31,7 @@ This project is a Cloudflare Worker that parses Open Graph metadata from website
 
 ### 4. Types (`src/types.ts`)
 
-- Type definitions for Open Graph metadata
+- Type definitions for parser output and extracted page signals
 - Interface definitions for the parser
 
 ## API Usage
@@ -48,14 +48,23 @@ Where `:url` is the URL-encoded address of the webpage to parse.
 {
 	"request_url": "https://example.com",
 	"resolve_url": "https://example.com",
+	"canonical_url": "https://example.com/article",
 	"title": "Example Title",
 	"description": "Page description",
 	"image": "https://example.com/image.jpg",
+	"image_alt": "Example image alt text",
+	"image_width": 1200,
+	"image_height": 630,
+	"image_type": "image/jpeg",
 	"site_name": "Example Site",
 	"type": "website",
-	"metadata": {
-		// All parsed meta name/property values, including those also promoted above
-	},
+	"locale": "en_US",
+	"authors": ["Ada Lovelace"],
+	"published_at": "2024-01-02T03:04:05Z",
+	"modified_at": "2024-01-03T04:05:06Z",
+	"meta_tags": [
+		// Ordered parsed meta name/property values, including those also promoted above
+	],
 	"ld_jsons": [
 		// Flattened JSON-LD objects from every application/ld+json script block
 	]
@@ -68,3 +77,12 @@ Where `:url` is the URL-encoded address of the webpage to parse.
 - Include proper error handling and timeouts
 - Implement caching headers for better performance
 - Consider rate limiting to prevent abuse
+
+## Parser Quality Fixtures
+
+- `test/parser-quality.spec.ts` exercises the parser against reduced snapshots taken from real public pages instead of live network responses.
+- Each fixture lives in its own directory under `test/fixtures/parser-quality/<fixture-id>/` with a `source.html` snapshot and a colocated `expected.json` containing both fixture metadata and the human-reviewed gold expectations.
+- The fixture loader uses eager Vite glob imports, so the Cloudflare Vitest worker runtime consumes bundled fixture modules instead of reading snapshot files through Node at test runtime.
+- `pnpm run evaluate:parser-quality` writes machine-readable reports to `artifacts/parser-quality/`, and `pnpm run score:parser-quality` summarizes the report with a failing exit code if critical mismatches appear.
+- Each fixture locks in expected normalized fields and contributes to a schema-watch report that highlights uncaptured `og:*`, `twitter:*`, `article:*`, other structured meta keys, and JSON-LD signals.
+- When adding a new fixture, prefer a small reduced HTML snapshot that keeps the original page's parser-relevant tags (`<html lang>`, relevant `<meta>`, and any `application/ld+json` blocks), then define its `sourceUrl`, `category`, `reviewStatus`, and assertions in the colocated `expected.json`.

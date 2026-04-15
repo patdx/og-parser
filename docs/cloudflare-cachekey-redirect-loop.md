@@ -127,7 +127,7 @@ From an application point of view, that is surprising because:
 
 ## Impact On Our Worker
 
-Our worker parses Open Graph metadata from arbitrary pages.
+Our worker extracts Open Graph and related page signals from arbitrary pages.
 
 This bug forced us to add an application-level fallback:
 
@@ -212,6 +212,6 @@ Because of this behavior, our worker currently prefers:
 - Cloudflare fetch caching on the common path
 - no explicit custom `cf.cacheKey` on that path
 - a one-time plain-fetch fallback on redirect-loop failure
-- explicit preservation of final resolved URL metadata
+- explicit preservation of the final resolved URL signal
 
 This keeps the service available while preserving enough detail for a future platform bug report.

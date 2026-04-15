@@ -143,7 +143,7 @@ It looked attractive because it avoids the redirect-loop in Cloudflare's cache-e
 - it stayed `MISS` for targets that set cookies or send non-cacheable directives
 - it pushed redirect correctness and cache semantics into our application layer
 
-The worker's job is to fetch a page and parse metadata, not to emulate an HTTP cache or reconstruct redirect chains manually.
+The worker's job is to fetch a page and extract page signals, not to emulate an HTTP cache or reconstruct redirect chains manually.
 
 The current design keeps the simple path simple and isolates the Cloudflare-specific failure behind a targeted retry.
 

@@ -1,0 +1,80 @@
+{
+	"sourceUrl": "https://www.apple.com/iphone/",
+	"category": "product",
+	"reviewStatus": "gold",
+	"notes": "Consumer product landing page with OG tags, app-link meta tags, and Brand JSON-LD.",
+	"normalized": {
+		"title": "iPhone",
+		"description": "Designed for Apple Intelligence. Discover iPhone 17 Pro, iPhone Air, iPhone 17, and iPhone 17e, along with iPhone 16.",
+		"image": "https://www.apple.com/v/iphone/home/cj/images/meta/iphone__bh930eyjnj0i_og.png?202604011630",
+		"site_name": "Apple",
+		"type": "website",
+		"html_lang": "en-US",
+		"locale": "en_US",
+		"canonical_url": "https://www.apple.com/iphone/"
+	},
+	"required_meta_tags": [
+		{
+			"key": "description",
+			"content": "Designed for Apple Intelligence. Discover iPhone 17 Pro, iPhone Air, iPhone 17, and iPhone 17e, along with iPhone 16."
+		},
+		{
+			"key": "og:image",
+			"content": "https://www.apple.com/v/iphone/home/cj/images/meta/iphone__bh930eyjnj0i_og.png?202604011630"
+		},
+		{
+			"key": "og:title",
+			"content": "iPhone"
+		},
+		{
+			"key": "og:description",
+			"content": "Designed for Apple Intelligence. Discover iPhone 17 Pro, iPhone Air, iPhone 17, and iPhone 17e, along with iPhone 16."
+		},
+		{
+			"key": "og:url",
+			"content": "https://www.apple.com/iphone/"
+		},
+		{
+			"key": "og:locale",
+			"content": "en_US"
+		},
+		{
+			"key": "og:site_name",
+			"content": "Apple"
+		},
+		{
+			"key": "og:type",
+			"content": "website"
+		},
+		{
+			"key": "twitter:site",
+			"content": "@Apple"
+		},
+		{
+			"key": "twitter:card",
+			"content": "summary_large_image"
+		},
+		{
+			"key": "al:ios:app_name",
+			"content": "Apple Store"
+		},
+		{
+			"key": "al:ios:app_store_id",
+			"content": "375380948"
+		},
+		{
+			"key": "al:ios:url",
+			"content": "https://www.apple.com/us/xc/iphone?cid=AOS_ASA"
+		}
+	],
+	"required_ld_jsons": [
+		{
+			"@type": "Brand",
+			"name": "iPhone",
+			"description": "Designed for Apple Intelligence. Discover iPhone 17 Pro, iPhone Air, iPhone 17, and iPhone 17e, along with iPhone 16.",
+			"url": "https://www.apple.com/iphone/",
+			"mainEntityOfPage": "https://www.apple.com/iphone/",
+			"image": "https://www.apple.com/v/iphone/home/cj/images/meta/iphone__bh930eyjnj0i_og.png"
+		}
+	]
+}

@@ -1,0 +1,1 @@
+- [ ] add parsed data validator, can help to measure if we correctly parsed data or not

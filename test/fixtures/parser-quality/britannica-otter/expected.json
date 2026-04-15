@@ -1,0 +1,85 @@
+{
+	"sourceUrl": "https://www.britannica.com/animal/otter",
+	"category": "article",
+	"reviewStatus": "gold",
+	"notes": "Editorial article page with uppercase OG type and rich Article JSON-LD.",
+	"normalized": {
+		"title": "Otter | Description, Habitat, Species, Distribution, Food, & Facts | Britannica",
+		"description": "Otter, any of 13 species of semiaquatic mammals that belong to the weasel family and are noted for their playfulness. The otter has a lithe and slender body with short legs, a strong neck, and a long flat tail that helps propel it gracefully through water. Two species are marine; the others live mostly in fresh water.",
+		"image": "https://cdn.britannica.com/78/3278-004-90D1CE49/Sea-otter-crab.jpg",
+		"site_name": "Encyclopedia Britannica",
+		"type": "ARTICLE",
+		"html_lang": "en",
+		"authors": [
+			"Serge Lariviere"
+		],
+		"published_at": "1999-05-04T00:00:00Z",
+		"modified_at": "2026-04-09T00:00:00Z",
+		"canonical_url": "https://www.britannica.com/animal/otter"
+	},
+	"required_meta_tags": [
+		{
+			"key": "description",
+			"content": "Otter, any of 13 species of semiaquatic mammals that belong to the weasel family and are noted for their playfulness. The otter has a lithe and slender body with short legs, a strong neck, and a long flat tail that helps propel it gracefully through water. Two species are marine; the others live mostly in fresh water."
+		},
+		{
+			"key": "twitter:card",
+			"content": "summary_large_image"
+		},
+		{
+			"key": "twitter:site",
+			"content": "@britannica"
+		},
+		{
+			"key": "twitter:image",
+			"content": "https://cdn.britannica.com/78/3278-004-90D1CE49/Sea-otter-crab.jpg"
+		},
+		{
+			"key": "twitter:description",
+			"content": "Otter, any of 13 species of semiaquatic mammals that belong to the weasel family and are noted for their playfulness. The otter has a lithe and slender body with short legs, a strong neck, and a long flat tail that helps propel it gracefully through water. Two species are marine; the others live mostly in fresh water."
+		},
+		{
+			"key": "og:type",
+			"content": "ARTICLE"
+		},
+		{
+			"key": "og:title",
+			"content": "Otter | Description, Habitat, Species, Distribution, Food, & Facts | Britannica"
+		},
+		{
+			"key": "og:description",
+			"content": "Otter, any of 13 species of semiaquatic mammals that belong to the weasel family and are noted for their playfulness. The otter has a lithe and slender body with short legs, a strong neck, and a long flat tail that helps propel it gracefully through water. Two species are marine; the others live mostly in fresh water."
+		},
+		{
+			"key": "og:site_name",
+			"content": "Encyclopedia Britannica"
+		},
+		{
+			"key": "og:url",
+			"content": "https://www.britannica.com/animal/otter"
+		},
+		{
+			"key": "og:image",
+			"content": "https://cdn.britannica.com/78/3278-004-90D1CE49/Sea-otter-crab.jpg"
+		}
+	],
+	"required_ld_jsons": [
+		{
+			"@type": "Article",
+			"headline": "Otter | Description, Habitat, Species, Distribution, Food, & Facts",
+			"url": "https://www.britannica.com/animal/otter",
+			"datePublished": "1999-05-04T00:00:00Z",
+			"dateModified": "2026-04-09T00:00:00Z",
+			"author": [
+				{
+					"@type": "Person",
+					"name": "Serge Lariviere"
+				}
+			],
+			"publisher": {
+				"@type": "Organization",
+				"name": "Encyclopedia Britannica"
+			}
+		}
+	]
+}

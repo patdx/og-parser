@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm exec *)",
+      "Bash(pnpm run *)",
+      "Bash(xargs *)"
+    ]
+  },
+  "$version": 3
+}
