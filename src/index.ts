@@ -124,7 +124,7 @@ export default {
 
 			if (debugMode) {
 				const responseText = await responseClone.text()
-				ogData.diagnostics.responseText = responseText
+				ogData.diagnostics.response_text = responseText
 			}
 
 			// Return JSON response with caching headers

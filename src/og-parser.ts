@@ -7,12 +7,14 @@ class HtmlHandler implements HTMLRewriterElementContentHandlers {
 	element(element: Element): void {
 		const lang = element.getAttribute('lang')
 		if (lang) {
-			this.result.data.htmlLang = lang
+			this.result.data.html_lang = lang
 		}
 	}
 }
 
 class MetaHandler implements HTMLRewriterElementContentHandlers {
+	private hasSecureOgImage = false
+
 	constructor(private result: ParserResult) {}
 
 	element(element: Element): void {
@@ -22,6 +24,22 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 		if (!property || !content) return
 
 		const propertyLower = property.toLowerCase()
+		this.result.data.metadata[propertyLower] = content
+
+		switch (propertyLower) {
+			case 'description':
+				this.setIfMissing('description', content)
+				return
+			case 'twitter:title':
+				this.setIfMissing('title', content)
+				return
+			case 'twitter:description':
+				this.setIfMissing('description', content)
+				return
+			case 'twitter:image':
+				this.setImageIfMissing(content)
+				return
+		}
 
 		if (propertyLower.startsWith('og:')) {
 			const key = propertyLower.substring(3)
@@ -33,10 +51,16 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 					this.result.data.description = content
 					break
 				case 'image':
+					if (!this.hasSecureOgImage) {
+						this.result.data.image = content
+					}
+					break
+				case 'image:secure_url':
+					this.hasSecureOgImage = true
 					this.result.data.image = content
 					break
 				case 'site_name':
-					this.result.data.siteName = content
+					this.result.data.site_name = content
 					break
 				case 'type':
 					this.result.data.type = content
@@ -46,6 +70,18 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 			}
 		}
 	}
+
+	private setIfMissing(field: 'title' | 'description', content: string) {
+		if (!this.result.data[field]) {
+			this.result.data[field] = content
+		}
+	}
+
+	private setImageIfMissing(content: string) {
+		if (!this.result.data.image && !this.hasSecureOgImage) {
+			this.result.data.image = content
+		}
+	}
 }
 
 class ScriptHandler implements HTMLRewriterElementContentHandlers {
@@ -53,8 +89,8 @@ class ScriptHandler implements HTMLRewriterElementContentHandlers {
 	private isCapturingLdJson = false
 
 	constructor(private result: ParserResult) {
-		if (!this.result.data.ldJsons) {
-			this.result.data.ldJsons = []
+		if (!this.result.data.ld_jsons) {
+			this.result.data.ld_jsons = []
 		}
 	}
 
@@ -89,7 +125,11 @@ class ScriptHandler implements HTMLRewriterElementContentHandlers {
 		const jsonText = this.textChunks.join('').trim()
 		try {
 			const parsedData = JSON.parse(jsonText)
-			this.result.data.ldJsons.push(parsedData)
+			if (Array.isArray(parsedData)) {
+				this.result.data.ld_jsons.push(...parsedData)
+			} else {
+				this.result.data.ld_jsons.push(parsedData)
+			}
 		} catch (e) {
 			const message = e instanceof Error ? e.message : String(e)
 			const jsonPreview = jsonText.replaceAll(/\s+/g, ' ').slice(0, 500)
@@ -114,19 +154,19 @@ export async function parseOpenGraph({
 }): Promise<OpenGraphData> {
 	const result: ParserResult = {
 		data: {
-			requestUrl,
-			resolvedUrl: response.url || response.headers.get(RESOLVED_URL_HEADER) || requestUrl,
+			request_url: requestUrl,
+			resolve_url: response.url || response.headers.get(RESOLVED_URL_HEADER) || requestUrl,
 			title: undefined,
 			description: undefined,
 			image: undefined,
-			siteName: undefined,
+			site_name: undefined,
 			type: undefined,
-			htmlLang: undefined,
+			html_lang: undefined,
 			metadata: {},
-			ldJsons: [],
+			ld_jsons: [],
 			diagnostics: {
-				cfColo,
-				cfCacheStatus,
+				cf_colo: cfColo,
+				cf_cache_status: cfCacheStatus,
 			},
 		},
 	}

@@ -46,15 +46,19 @@ Where `:url` is the URL-encoded address of the webpage to parse.
 
 ```json
 {
-	"url": "https://example.com",
+	"request_url": "https://example.com",
+	"resolve_url": "https://example.com",
 	"title": "Example Title",
 	"description": "Page description",
 	"image": "https://example.com/image.jpg",
-	"siteName": "Example Site",
+	"site_name": "Example Site",
 	"type": "website",
 	"metadata": {
-		// Additional Open Graph properties found
-	}
+		// All parsed meta name/property values, including those also promoted above
+	},
+	"ld_jsons": [
+		// Flattened JSON-LD objects from every application/ld+json script block
+	]
 }
 ```
 
