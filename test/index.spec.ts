@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import worker from '../src/index'
 import { RESOLVED_URL_HEADER } from '../src/cf-cacher'
 import { deriveOpenGraphData, extractOpenGraphData, parseOpenGraph } from '../src/og-parser'
-import type { MetaTag } from '../src/types'
+import type { MetaTag, OpenGraphMedia } from '../src/types'
 
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>
 type ParsedResponse = {
@@ -11,10 +11,9 @@ type ParsedResponse = {
 	request_url: string
 	resolve_url: string
 	canonical_url?: string
-	image_alt?: string
-	image_width?: number
-	image_height?: number
-	image_type?: string
+	images?: OpenGraphMedia[]
+	videos?: OpenGraphMedia[]
+	audio?: OpenGraphMedia[]
 	locale?: string
 	authors?: string[]
 	published_at?: string
@@ -208,7 +207,7 @@ describe('parseOpenGraph', () => {
 		expect(result.modified_at).toBe('2024-01-03T04:05:06Z')
 	})
 
-	it('preserves parsed meta tags in order and prefers og:image:secure_url over og:image', async () => {
+	it('preserves parsed meta tags in order and groups open graph media into arrays', async () => {
 		const response = new Response(
 			`<!doctype html>
 			<html lang="en">
@@ -222,6 +221,16 @@ describe('parseOpenGraph', () => {
 					<meta property="og:image:width" content="1200" />
 					<meta property="og:image:height" content="630" />
 					<meta property="og:image:type" content="image/jpeg" />
+					<meta property="og:image" content="https://cdn.example/preview-secondary.jpg" />
+					<meta property="og:image:alt" content="Secondary preview image" />
+					<meta property="og:video" content="http://cdn.example/preview.mp4" />
+					<meta property="og:video:secure_url" content="https://cdn.example/preview.mp4" />
+					<meta property="og:video:width" content="1920" />
+					<meta property="og:video:height" content="1080" />
+					<meta property="og:video:type" content="video/mp4" />
+					<meta property="og:audio" content="http://cdn.example/preview.mp3" />
+					<meta property="og:audio:secure_url" content="https://cdn.example/preview.mp3" />
+					<meta property="og:audio:type" content="audio/mpeg" />
 					<meta property="og:locale" content="en_US" />
 				</head>
 			</html>`,
@@ -237,11 +246,33 @@ describe('parseOpenGraph', () => {
 			requestUrl: 'https://atlas.example/explore',
 		})
 
-		expect(result.image).toBe('https://cdn.example/preview.jpg')
-		expect(result.image_alt).toBe('Preview image')
-		expect(result.image_width).toBe(1200)
-		expect(result.image_height).toBe(630)
-		expect(result.image_type).toBe('image/jpeg')
+		expect(result.images).toEqual([
+			{
+				url: 'https://cdn.example/preview.jpg',
+				alt: 'Preview image',
+				width: 1200,
+				height: 630,
+				type: 'image/jpeg',
+			},
+			{
+				url: 'https://cdn.example/preview-secondary.jpg',
+				alt: 'Secondary preview image',
+			},
+		])
+		expect(result.videos).toEqual([
+			{
+				url: 'https://cdn.example/preview.mp4',
+				width: 1920,
+				height: 1080,
+				type: 'video/mp4',
+			},
+		])
+		expect(result.audio).toEqual([
+			{
+				url: 'https://cdn.example/preview.mp3',
+				type: 'audio/mpeg',
+			},
+		])
 		expect(result.locale).toBe('en_US')
 		expect(result.meta_tags).toEqual([
 			{ key: 'og:title', content: 'North Harbor Coffee' },
@@ -253,22 +284,30 @@ describe('parseOpenGraph', () => {
 			{ key: 'og:image:width', content: '1200' },
 			{ key: 'og:image:height', content: '630' },
 			{ key: 'og:image:type', content: 'image/jpeg' },
+			{ key: 'og:image', content: 'https://cdn.example/preview-secondary.jpg' },
+			{ key: 'og:image:alt', content: 'Secondary preview image' },
+			{ key: 'og:video', content: 'http://cdn.example/preview.mp4' },
+			{ key: 'og:video:secure_url', content: 'https://cdn.example/preview.mp4' },
+			{ key: 'og:video:width', content: '1920' },
+			{ key: 'og:video:height', content: '1080' },
+			{ key: 'og:video:type', content: 'video/mp4' },
+			{ key: 'og:audio', content: 'http://cdn.example/preview.mp3' },
+			{ key: 'og:audio:secure_url', content: 'https://cdn.example/preview.mp3' },
+			{ key: 'og:audio:type', content: 'audio/mpeg' },
 			{ key: 'og:locale', content: 'en_US' },
 		])
 	})
 
-	it('keeps og:image fields tied to the selected image group', () => {
+	it('keeps og:image fields tied to their source groups', () => {
 		const result = deriveOpenGraphData({
 			request_url: 'https://atlas.example/explore',
 			resolve_url: 'https://atlas.example/explore',
 			canonical_url: undefined,
 			title: undefined,
 			description: undefined,
-			image: undefined,
-			image_alt: undefined,
-			image_width: undefined,
-			image_height: undefined,
-			image_type: undefined,
+			images: undefined,
+			videos: undefined,
+			audio: undefined,
 			site_name: undefined,
 			type: undefined,
 			html_lang: 'en',
@@ -291,11 +330,58 @@ describe('parseOpenGraph', () => {
 			diagnostics: {},
 		})
 
-		expect(result.image).toBe('https://cdn.example/first.jpg')
-		expect(result.image_alt).toBe('First image')
-		expect(result.image_width).toBe(1200)
-		expect(result.image_height).toBe(630)
-		expect(result.image_type).toBe('image/jpeg')
+		expect(result.images).toEqual([
+			{
+				url: 'https://cdn.example/first.jpg',
+				alt: 'First image',
+				width: 1200,
+				height: 630,
+				type: 'image/jpeg',
+			},
+			{
+				url: 'https://cdn.example/second.jpg',
+				alt: 'Second image',
+				width: 800,
+			},
+		])
+	})
+
+	it('treats og:image:url as an alias of og:image for the current group', () => {
+		const result = deriveOpenGraphData({
+			request_url: 'https://atlas.example/explore',
+			resolve_url: 'https://atlas.example/explore',
+			canonical_url: undefined,
+			title: undefined,
+			description: undefined,
+			images: undefined,
+			videos: undefined,
+			audio: undefined,
+			site_name: undefined,
+			type: undefined,
+			html_lang: 'en',
+			locale: undefined,
+			authors: undefined,
+			published_at: undefined,
+			modified_at: undefined,
+			meta_tags: [
+				{ key: 'og:image', content: 'https://cdn.example/first.jpg' },
+				{ key: 'og:image:url', content: 'https://cdn.example/first.jpg' },
+				{ key: 'og:image:alt', content: 'First image' },
+				{ key: 'og:image', content: 'https://cdn.example/second.jpg' },
+			],
+			ld_jsons: [],
+			diagnostics: {},
+		})
+
+		expect(result.images).toEqual([
+			{
+				url: 'https://cdn.example/first.jpg',
+				alt: 'First image',
+			},
+			{
+				url: 'https://cdn.example/second.jpg',
+			},
+		])
 	})
 
 	it('only promotes page-level structured-data summary fields', async () => {
@@ -364,7 +450,7 @@ describe('parseOpenGraph', () => {
 
 		expect(result.title).toBe('North Harbor Coffee')
 		expect(result.description).toBe('Freshly roasted coffee and pastries.')
-		expect(result.image).toBe('https://cdn.example/card.jpg')
+		expect(result.images).toEqual([{ url: 'https://cdn.example/card.jpg' }])
 		expect(result.meta_tags).toEqual([
 			{ key: 'description', content: 'Freshly roasted coffee and pastries.' },
 			{ key: 'twitter:title', content: 'North Harbor Coffee' },
@@ -413,7 +499,7 @@ describe('parseOpenGraph', () => {
 			requestUrl: 'https://atlas.example/explore',
 		})
 
-		expect(result.image).toBeUndefined()
+		expect(result.images).toBeUndefined()
 		expect(result.meta_tags).toEqual([
 			{ key: 'og:image', content: 'http://cdn.example/first.jpg' },
 			{ key: 'og:image:secure_url', content: 'https://cdn.example/first.jpg' },

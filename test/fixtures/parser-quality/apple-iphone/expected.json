@@ -6,7 +6,11 @@
 	"normalized": {
 		"title": "iPhone",
 		"description": "Designed for Apple Intelligence. Discover iPhone 17 Pro, iPhone Air, iPhone 17, and iPhone 17e, along with iPhone 16.",
-		"image": "https://www.apple.com/v/iphone/home/cj/images/meta/iphone__bh930eyjnj0i_og.png?202604011630",
+		"images": [
+			{
+				"url": "https://www.apple.com/v/iphone/home/cj/images/meta/iphone__bh930eyjnj0i_og.png?202604011630"
+			}
+		],
 		"site_name": "Apple",
 		"type": "website",
 		"html_lang": "en-US",

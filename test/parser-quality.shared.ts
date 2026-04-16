@@ -19,11 +19,10 @@ export interface ParserQualityFixtureEvaluation {
 	category: string
 	status: FixtureStatus
 	mismatches: ParserQualityMismatch[]
-	actual: Pick<OpenGraphData, 'title' | 'description' | 'image' | 'site_name' | 'type' | 'html_lang' | 'canonical_url'> & {
-		image_alt?: string
-		image_width?: number
-		image_height?: number
-		image_type?: string
+	actual: Pick<
+		OpenGraphData,
+		'title' | 'description' | 'images' | 'videos' | 'audio' | 'site_name' | 'type' | 'html_lang' | 'canonical_url'
+	> & {
 		locale?: string
 		authors?: string[]
 		published_at?: string
@@ -46,17 +45,15 @@ export interface ParserQualityReport {
 	fixtures: ParserQualityFixtureEvaluation[]
 }
 
-const criticalFields = new Set<NormalizedField>(['title', 'description', 'image'])
+const criticalFields = new Set<NormalizedField>(['title', 'description', 'images'])
 const majorFields = new Set<NormalizedField>([
+	'videos',
+	'audio',
 	'site_name',
 	'type',
 	'html_lang',
 	'canonical_url',
 	'locale',
-	'image_alt',
-	'image_width',
-	'image_height',
-	'image_type',
 	'authors',
 	'published_at',
 	'modified_at',
@@ -65,17 +62,32 @@ const promotedOgKeys = new Set([
 	'og:title',
 	'og:description',
 	'og:image',
+	'og:image:url',
 	'og:image:secure_url',
 	'og:image:alt',
 	'og:image:width',
 	'og:image:height',
 	'og:image:type',
+	'og:video',
+	'og:video:url',
+	'og:video:secure_url',
+	'og:video:alt',
+	'og:video:width',
+	'og:video:height',
+	'og:video:type',
+	'og:audio',
+	'og:audio:url',
+	'og:audio:secure_url',
+	'og:audio:alt',
+	'og:audio:width',
+	'og:audio:height',
+	'og:audio:type',
 	'og:site_name',
 	'og:type',
 	'og:url',
 	'og:locale',
 ])
-const fallbackTwitterKeys = new Set(['twitter:title', 'twitter:description', 'twitter:image'])
+const fallbackTwitterKeys = new Set(['twitter:title', 'twitter:description', 'twitter:image', 'twitter:image:alt'])
 
 export async function evaluateParserQualityFixtures(): Promise<ParserQualityReport> {
 	const fixtures = []
@@ -176,11 +188,9 @@ export async function evaluateParserQualityFixture(fixture: ParserQualityFixture
 		actual: {
 			title: actual.title,
 			description: actual.description,
-			image: actual.image,
-			image_alt: actual.image_alt,
-			image_width: actual.image_width,
-			image_height: actual.image_height,
-			image_type: actual.image_type,
+			images: actual.images,
+			videos: actual.videos,
+			audio: actual.audio,
 			site_name: actual.site_name,
 			type: actual.type,
 			html_lang: actual.html_lang,

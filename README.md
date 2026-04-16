@@ -51,11 +51,29 @@ Where `:url` is the URL-encoded address of the webpage to parse.
 	"canonical_url": "https://example.com/article",
 	"title": "Example Title",
 	"description": "Page description",
-	"image": "https://example.com/image.jpg",
-	"image_alt": "Example image alt text",
-	"image_width": 1200,
-	"image_height": 630,
-	"image_type": "image/jpeg",
+	"images": [
+		{
+			"url": "https://example.com/image.jpg",
+			"alt": "Example image alt text",
+			"width": 1200,
+			"height": 630,
+			"type": "image/jpeg"
+		}
+	],
+	"videos": [
+		{
+			"url": "https://example.com/video.mp4",
+			"width": 1280,
+			"height": 720,
+			"type": "video/mp4"
+		}
+	],
+	"audio": [
+		{
+			"url": "https://example.com/audio.mp3",
+			"type": "audio/mpeg"
+		}
+	],
 	"site_name": "Example Site",
 	"type": "website",
 	"locale": "en_US",

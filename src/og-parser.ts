@@ -1,5 +1,5 @@
 import { RESOLVED_URL_HEADER } from './cf-cacher'
-import { MetaTag, OpenGraphData, ParserResult } from './types'
+import { MetaTag, OpenGraphData, OpenGraphMedia, ParserResult } from './types'
 
 class HtmlHandler implements HTMLRewriterElementContentHandlers {
 	constructor(private result: ParserResult) {}
@@ -29,13 +29,17 @@ class MetaHandler implements HTMLRewriterElementContentHandlers {
 }
 
 type OgImageGroup = {
-	image?: string
+	url?: string
 	secure_url?: string
 	alt?: string
 	width?: number
 	height?: number
 	type?: string
 }
+
+type MediaKind = 'image' | 'video' | 'audio'
+
+type MediaField = 'url' | 'secure_url' | 'alt' | 'width' | 'height' | 'type'
 
 type StructuredDataSummary = {
 	authors: string[]
@@ -44,15 +48,27 @@ type StructuredDataSummary = {
 }
 
 class MetaTagDeriver {
-	private currentOgImageGroup?: OgImageGroup
-	private selectedOgImageGroup?: OgImageGroup
-	private hasSelectedSecureOgImage = false
+	private currentMediaGroups: Partial<Record<MediaKind, OgImageGroup>> = {}
+	private mediaGroups: Record<MediaKind, OgImageGroup[]> = {
+		image: [],
+		video: [],
+		audio: [],
+	}
+	private twitterImageFallback?: OgImageGroup
 
 	constructor(private result: OpenGraphData) {}
 
 	apply(metaTags: MetaTag[]) {
 		for (const metaTag of metaTags) {
 			this.applyOne(metaTag)
+		}
+
+		this.result.images = normalizeMediaGroups(this.mediaGroups.image)
+		this.result.videos = normalizeMediaGroups(this.mediaGroups.video)
+		this.result.audio = normalizeMediaGroups(this.mediaGroups.audio)
+
+		if (!this.result.images && this.twitterImageFallback) {
+			this.result.images = normalizeMediaGroups([this.twitterImageFallback])
 		}
 	}
 
@@ -71,7 +87,10 @@ class MetaTagDeriver {
 				this.setIfMissing('description', content)
 				return
 			case 'twitter:image':
-				this.setImageIfMissing(content)
+				this.getTwitterImageFallback().url ??= content
+				return
+			case 'twitter:image:alt':
+				this.getTwitterImageFallback().alt ??= content
 				return
 		}
 
@@ -92,41 +111,14 @@ class MetaTagDeriver {
 			case 'url':
 				this.result.canonical_url = content
 				break
-			case 'image':
-				this.getOgImageGroupForPrimaryTag('image').image = content
-				if (!this.hasSelectedSecureOgImage) {
-					this.selectedOgImageGroup = this.currentOgImageGroup
-				}
-				this.syncSelectedOgImageGroup()
-				break
-			case 'image:secure_url':
-				this.getOgImageGroupForPrimaryTag('secure_url').secure_url = content
-				this.hasSelectedSecureOgImage = true
-				this.selectedOgImageGroup = this.currentOgImageGroup
-				this.syncSelectedOgImageGroup()
-				break
-			case 'image:alt':
-				this.getCurrentOgImageGroup().alt = content
-				this.syncSelectedOgImageGroupIfCurrentIsSelected()
-				break
-			case 'image:width':
-				this.getCurrentOgImageGroup().width = parseIntegerMeta(content)
-				this.syncSelectedOgImageGroupIfCurrentIsSelected()
-				break
-			case 'image:height':
-				this.getCurrentOgImageGroup().height = parseIntegerMeta(content)
-				this.syncSelectedOgImageGroupIfCurrentIsSelected()
-				break
-			case 'image:type':
-				this.getCurrentOgImageGroup().type = content
-				this.syncSelectedOgImageGroupIfCurrentIsSelected()
-				break
 			case 'site_name':
 				this.result.site_name = content
 				break
 			case 'type':
 				this.result.type = content
 				break
+			default:
+				this.applyMediaTag(key.substring(3), content)
 		}
 	}
 
@@ -136,45 +128,63 @@ class MetaTagDeriver {
 		}
 	}
 
-	private setImageIfMissing(content: string) {
-		if (!this.result.image && !this.selectedOgImageGroup) {
-			this.result.image = content
-		}
+	private getTwitterImageFallback(): OgImageGroup {
+		this.twitterImageFallback ??= {}
+		return this.twitterImageFallback
 	}
 
-	private getCurrentOgImageGroup(): OgImageGroup {
-		if (!this.currentOgImageGroup) {
-			this.currentOgImageGroup = {}
-		}
-
-		return this.currentOgImageGroup as OgImageGroup
-	}
-
-	private getOgImageGroupForPrimaryTag(key: 'image' | 'secure_url'): OgImageGroup {
-		const currentGroup = this.getCurrentOgImageGroup()
-		if (currentGroup[key] !== undefined) {
-			this.currentOgImageGroup = {}
-		}
-
-		return this.getCurrentOgImageGroup()
-	}
-
-	private syncSelectedOgImageGroupIfCurrentIsSelected() {
-		if (this.currentOgImageGroup === this.selectedOgImageGroup) {
-			this.syncSelectedOgImageGroup()
-		}
-	}
-
-	private syncSelectedOgImageGroup() {
-		if (!this.selectedOgImageGroup) {
+	private applyMediaTag(key: string, content: string) {
+		const match = /^(image|video|audio)(?::(url|secure_url|alt|width|height|type))?$/.exec(key)
+		if (!match) {
 			return
 		}
 
-		this.result.image = this.selectedOgImageGroup.secure_url ?? this.selectedOgImageGroup.image
-		this.result.image_alt = this.selectedOgImageGroup.alt
-		this.result.image_width = this.selectedOgImageGroup.width
-		this.result.image_height = this.selectedOgImageGroup.height
-		this.result.image_type = this.selectedOgImageGroup.type
+		const mediaKind = match[1] as MediaKind
+		const field = (match[2] ?? 'url') as MediaField
+
+		if (field === 'url' || field === 'secure_url') {
+			this.getMediaGroupForPrimaryTag(mediaKind, field, content)[field] = content
+			return
+		}
+
+		if (field === 'width' || field === 'height') {
+			this.getCurrentMediaGroup(mediaKind)[field] = parseIntegerMeta(content)
+			return
+		}
+
+		this.getCurrentMediaGroup(mediaKind)[field] = content
+	}
+
+	private getCurrentMediaGroup(kind: MediaKind): OgImageGroup {
+		const currentGroup = this.currentMediaGroups[kind]
+		if (currentGroup) {
+			return currentGroup
+		}
+
+		const nextGroup: OgImageGroup = {}
+		this.currentMediaGroups[kind] = nextGroup
+		this.mediaGroups[kind].push(nextGroup)
+		return nextGroup
+	}
+
+	private getMediaGroupForPrimaryTag(kind: MediaKind, field: 'url' | 'secure_url', content: string): OgImageGroup {
+		const currentGroup = this.getCurrentMediaGroup(kind)
+		if (
+			currentGroup[field] === content ||
+			(field === 'url' && currentGroup.secure_url === content) ||
+			(field === 'secure_url' && currentGroup.url === content)
+		) {
+			return currentGroup
+		}
+
+		if (currentGroup[field] !== undefined) {
+			const nextGroup: OgImageGroup = {}
+			this.currentMediaGroups[kind] = nextGroup
+			this.mediaGroups[kind].push(nextGroup)
+			return nextGroup
+		}
+
+		return currentGroup
 	}
 }
 
@@ -253,11 +263,9 @@ export async function extractOpenGraphData({
 			canonical_url: undefined,
 			title: undefined,
 			description: undefined,
-			image: undefined,
-			image_alt: undefined,
-			image_width: undefined,
-			image_height: undefined,
-			image_type: undefined,
+			images: undefined,
+			videos: undefined,
+			audio: undefined,
 			site_name: undefined,
 			type: undefined,
 			html_lang: undefined,
@@ -290,11 +298,9 @@ export function deriveOpenGraphData(data: OpenGraphData): OpenGraphData {
 		canonical_url: undefined,
 		title: undefined,
 		description: undefined,
-		image: undefined,
-		image_alt: undefined,
-		image_width: undefined,
-		image_height: undefined,
-		image_type: undefined,
+		images: undefined,
+		videos: undefined,
+		audio: undefined,
 		site_name: undefined,
 		type: undefined,
 		locale: undefined,
@@ -366,6 +372,27 @@ function parseIntegerMeta(value: string): number | undefined {
 	}
 
 	return Number.parseInt(value, 10)
+}
+
+function normalizeMediaGroups(groups: OgImageGroup[]): OpenGraphMedia[] | undefined {
+	const media = groups.flatMap((group) => {
+		const url = group.secure_url ?? group.url
+		if (!url) {
+			return []
+		}
+
+		return [
+			{
+				url,
+				alt: group.alt,
+				width: group.width,
+				height: group.height,
+				type: group.type,
+			} satisfies OpenGraphMedia,
+		]
+	})
+
+	return media.length > 0 ? media : undefined
 }
 
 function inferStructuredDataSummary(ldJsons: unknown[]) {

@@ -3,17 +3,23 @@ export interface MetaTag {
 	content: string
 }
 
+export interface OpenGraphMedia {
+	url: string
+	alt?: string
+	width?: number
+	height?: number
+	type?: string
+}
+
 export interface OpenGraphData {
 	request_url: string // The original request URL
 	resolve_url: string // The final URL after redirects
 	canonical_url?: string
 	title?: string
 	description?: string
-	image?: string
-	image_alt?: string
-	image_width?: number
-	image_height?: number
-	image_type?: string
+	images?: OpenGraphMedia[]
+	videos?: OpenGraphMedia[]
+	audio?: OpenGraphMedia[]
 	site_name?: string
 	type?: string
 	html_lang?: string
